@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!--
+  This is the main test form page, that is passed to the client by default.
+-->
+<html>
+  <head>
+    <script>
+      var loc = window.location.toString();
+      if (loc.substr(-1) != '/') {
+        window.location = loc + '/';
+      }
+    </script>
+    <link rel="shortcut icon" href="https://www.ncbi.nlm.nih.gov/favicon.ico" />
+    <script type='text/javascript'
+            src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js'></script>
+    <script type='text/javascript'
+            src='//cdnjs.cloudflare.com/ajax/libs/js-yaml/3.2.7/js-yaml.min.js'></script>
+
+    <script type='text/javascript' src='resources/test.js'></script>
+    <style type='text/css'>
+      tr {
+        vertical-align: top;
+      }
+      th {
+        text-align: right;
+      }
+      td {
+        padding-bottom: 0.3em;
+      }
+      tr.button-row > td {
+        padding-top: 0.5em;
+      }
+      .disabled {
+        color: #AAA;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RenderMath</h1>
+    <p>
+      Enter MathML, LaTeX or JATS in the content box below, or select a file.
+    </p>
+    <form id='form' method='POST' action='.'>
+      <p>
+        <input type="file" id='file' name="file" />
+      </p>
+      <table>
+        <tr>
+          <th><label for='math-in-format-select'>Math format</label></th>
+          <td>
+            <select id='math-in-format-select' name='in-format'>
+              <option value='auto' selected='selected'>Auto-detect</option>
+              <option value='mml'>MathML</option>
+              <option value='latex'>LaTeX</option>
+              <option value='jats'>JATS</option>
+            </select>
+            &#160;&#160;&#160;
+            <label id='latex-style-label' for='latex-style-select'>LaTeX style:</label>
+            <select id='latex-style-select' name='latex-style'>
+              <option value='display' selected='selected'>display (block)</option>
+              <option value='text' selected='selected'>text (inline)</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th><label for='q'>Content</label></th>
+          <td>
+            <textarea name='q' id='q' rows='20' cols='100'></textarea>
+          <!--
+            <input type='hidden' name='q' id='q' value='fleegle'>
+          -->
+          </td>
+        </tr>
+      <!--
+        <tr>
+          <th><label for='out-format-select'>Output format</label></th>
+          <td>
+            <select id='out-format-select' name='out-format'>
+              <option value='svg' selected='selected'>SVG</option>
+              <option value='client'>Client rendering</option>
+            </select>
+          </td>
+        </tr>
+      -->
+        <tr>
+          <th><label for='max-width-input'>Maximum width</label></th>
+          <td>
+            <!-- width initial value is that allowed for equations in PMC -->
+            <input id='max-width-input' type='text' name='width' value='621'/>
+          </td>
+        </tr>
+
+        <tr>
+          <th><label for='method'>HTTP method</label></th>
+          <td>
+            <select id='method'>
+              <option value='POST' selected='selected'>POST</option>
+              <option value='GET'>GET</option>
+            </select>
+          </td>
+        </tr>
+        <tr class='button-row'>
+          <td colspan='2'>
+            <div style='float: right'>
+              <input type='reset' value='Reset'/>
+            </div>
+            <input type='submit'/>
+          </td>
+        </tr>
+      </table>
+    </form>
+
+    <h2>Description</h2>
+    <div>
+      <p>Use this service to test the rendering of mathematical formulas with MathJax.
+      </p>
+      <p>This is really two services in one:</p>
+      <ol>
+        <li>When you provide it with a single formula in either LaTeX or MathML format,
+          then that formula will be rendered on our
+          servers, and the results will be returned as a pure SVG resource.</li>
+        <li>When you provide it with a JATS file that contains one or more equations,
+          then all of the formulas will be extracted from that JATS file, and sent back to your browser
+          encapsulated in an HTML table. Your browser will then use MathJax to render the
+          formulas locally.</li>
+      </ol>
+      <p>
+        When MathML is provided with a namespace prefix, that prefix <em>must be
+        "mml:"</em>. No other namespace prefix will work.
+      </p>
+    </div>
+
+    <h2>Examples</h2>
+    <div id='examples-div'>
+      <ul />
+    </div>
+
+    <hr />
+    <p>
+      <span style='font-style: italic'>Version <!-- version --></span>
+    </p>
+
+    <a href="https://github.com/ncbi/render-math"><img
+       style="position: absolute; top: 0; right: 0; border: 0;"
+       src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67"
+       alt="Fork me on GitHub"
+       data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" /></a>
+
+  </body>
+</html>

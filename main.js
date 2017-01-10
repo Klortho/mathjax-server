@@ -1,143 +1,11 @@
-// This is the main phantomjs program that runs on the server. It loads the engine.html
-// page inside the headless browser, and then starts up an HTTP service that listens for
-// requests.
 
-// Version
-var VERSION = '1.1.1';
-
-var system = require('system');
-var args = system.args;
-var server = require('webserver').create();
-var page = require('webpage').create();
+var args = process.argv;
 var fs = require('fs');
+const mjServer = require('./index.js');
 
-var parse_jats = require('./parse_jats').parse_jats;
+//var parse_jats = require('./parse_jats').parse_jats;
 
-
-var usage =
-  'Usage: phantomjs main.js [options]\n' +
-  'Options:\n' +
-  '  -h,--help            Print this usage message and exit\n' +
-  '  -v,--version         Print the version number and exit\n' +
-  '  -p,--port <port>     IP port on which to start the server\n' +
-  '  -r,--requests <num>  Process this many requests and then exit.  -1 means \n' +
-  '                       never stop.\n' +
-  '  -m,--mathjax <url>   Use alternate URL to load MathJax; including the config file\n' +
-  '  -d,--debug           Enable verbose debug messages\n';
-
-var port = 16000;
-var requests_to_serve = -1;
-var engine_page = 'engine.html';    // engine page template, before $mathjax_url is substituted
-var mathjax_url = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG';
-var debug = false;
-
-// Parse command-line options.  This keeps track of which one we are on
-var arg_num = 1;
-
-// Helper function for option parsing.  Allow option/arg in any of
-// these forms:
-//    1: -p 1234
-//    2: --po 1234
-//    3: --po=1234
-// Returns:
-//    1 or 2: true
-//    3:      '1234'
-//    else:   false
-function option_match(name, takes_optarg, arg) {
-  var ieq = arg.indexOf('=');
-
-  var arg_key;
-  if (arg.substr(0, 2) == '--' && (takes_optarg && ieq != -1)) {  // form #3
-    arg_key = arg.substring(2, ieq);
-    if (name.substr(0, arg_key.length) == arg_key) {
-      return arg.substr(ieq + 1);
-    }
-    return false;
-  }
-
-  if (arg.substr(0, 2) == '--') {
-    arg_key = arg.substr(2);
-  }
-  else if (arg.substr(0, 1) == '-') {
-    arg_key = arg.substr(1);
-  }
-  else {
-    return false;
-  }
-  return name.substr(0, arg_key.length) == arg_key;
-}
-
-// This helper handles one option that takes an option-argument
-function option_arg_parse(name) {
-  var arg = args[arg_num];
-  match = option_match(name, true, arg);
-  if (!match) return false;
-
-  if (typeof match != 'string') {
-    if (arg_num + 1 < args.length) {
-      arg_num++;
-      match = args[arg_num];
-    }
-    else {
-      phantom.exit(1);
-    }
-  }
-
-  if (name == 'port') {
-      port = match - 0;
-  }
-  else if (name == 'requests') { requests_to_serve = match - 0; }
-  else if (name == 'mathjax') { mathjax_url = match; }
-
-  arg_num++;
-  return true;
-}
-
-var to_exit = false;
-while (arg_num < args.length) {
-  var arg = args[arg_num];
-
-  if (option_match('help', false, arg)) {
-    console.log(usage);
-    phantom.exit(0);
-    break;
-  }
-
-  if (option_match('version', false, arg)) {
-    console.log('RenderMath version ' + VERSION);
-    phantom.exit(0);
-    break;
-  }
-
-  if (option_match('debug', false, arg)) {
-    debug = true;
-    arg_num++;
-    continue;
-  }
-
-  if (option_arg_parse('port')) {
-    continue;
-  }
-  if (option_arg_parse('requests')) {
-    continue;
-  }
-  if (option_arg_parse('mathjax')) {
-    continue;
-  }
-
-  console.error("Unrecognized argument: '" + arg + "'. Use '--help' for usage info.");
-  phantom.exit(1);
-  break;
-}
-
-log("Starting RenderMath, version " + VERSION + ": " +
-    'port = ' + port + ", " +
-    'requests_to_serve = ' + requests_to_serve + ", " +
-    'mathjax_url = ' + mathjax_url + ", " +
-    'debug = ' + debug
-);
-
-
+/*
 // activeRequests holds information about any active MathJax requests.  It is
 // a hash, with a sequential number as the key.  request_num gets incremented
 // for *every* HTTP request, but only requests that get passed to MathJax have an
@@ -167,6 +35,7 @@ var client_template = (function() {
 })();
 
 var service = null;
+*/
 
 // thanks to:
 // stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
@@ -441,7 +310,7 @@ function listenLoop(engine_status) {
         resp.close();
       }
       else if (query.test_form) {
-        log(request_num + ": returning test form");
+          log(request_num + ": returning test form");
         /*
           console.log("resp.headers = {");
           for (var k in resp.headers) {
@@ -562,9 +431,6 @@ function client_table(resp, query) {
     mathjax_url = m[1] + "?config=" + m[4];
   }
 
-
-
-
   resp_page = client_template.replace("$mathjax_url", mathjax_url);
 
   var rows = '';
@@ -622,33 +488,3 @@ function xml_escape(s) {
 function log(msg) {
   console.log((new Date()).toISOString() + ": " + msg);
 }
-
-
-// Read the engine page in, substitute the mathjax_url
-
-if (fs.isReadable(engine_page)) {
-  var engine_str = fs.read(engine_page);
-}
-else {
-  console.error("Can't find " + engine_page);
-  phantom.exit(1);
-}
-engine_str = engine_str.replace("$mathjax_url", mathjax_url);
-
-// Open the web page. Once loaded, it will invoke listenLoop.
-page.onLoadFinished = listenLoop;
-page.setContent(engine_str, "file://" + fs.absolute(".") + "/engine.html");
-
-
-
-
-/* These includeJs calls would allow us to specify the MathJax location as a
-   command-line parameter, but then you'd have to take the <script> tags out of
-   engine.html, and we'd lose the ability to debug by loading that in a browser
-   directly.
-page.open('engine.html', function (status) {
-  page.includeJs('mathjax/MathJax.js?config=TeX-AMS-MML_SVG', function() {
-    page.includeJs('engine.js', listenLoop);
-  });
-});
-*/

@@ -1,5 +1,5 @@
+# render-math-2
 
-# mathjax-server
 Nodejs server receives JSON post, returns MathJax-rendered version.
 
 This project is a server front-end for the MathJax-node library.
@@ -12,6 +12,7 @@ Requires the GitHub repository for MathJax-node:
 npm install https://github.com/mathjax/MathJax-node/tarball/master
 
 npm install mathjax-server
+
 
 ## Run Server Example
 
@@ -26,7 +27,7 @@ and run the command:
 
 ## Run Client Example
 
-A test client for the server. 
+A test client for the server.
 
 The example contains LaTeX math expression in JSON object `pdata` as input. The server returns SVG rendering of the expression, including a text version as `alt` text.
 
@@ -78,11 +79,11 @@ The example contains LaTeX math expression in JSON object `pdata` as input. The 
 
 ## index.js
 
-Server listens for POST requests containing MathJax configuration and math as a string. Returns rendered math. 
+Server listens for POST requests containing MathJax configuration and math as a string. Returns rendered math.
 
 The input math string can be in LaTeX or MathML. The output rendering can be SVG, PNG, or MathML. Additionally, you can specify that speech text rendering is added as alt text.
 
-See the documentation for Mathjax-node for more information on PNG outputs. 
+See the documentation for Mathjax-node for more information on PNG outputs.
 
 The JSON data to post to the server contains the following keys.
 
@@ -96,6 +97,3 @@ The JSON data to post to the server contains the following keys.
 - `ex`: Specifies x-height in pixels.
 - `width`: Specifies maximum width for rendered image.
 - `linebreaks`: Specifies whether to allow lines to break.
-
-
-

@@ -3,6 +3,9 @@
   "version": "1.2.0",
   "description": "Server listens for POST with MathJax config. Returns rendered version.",
   "main": "index.js",
+  "bin": {
+    "rendermath": "index.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/tiarno/mathjax-server.git"
@@ -14,17 +17,19 @@
     "svg",
     "mathml"
   ],
-  "author": "Tim Arnold <jtim.arnold@gmail.com> (http://reachtim.com)",
+  "author": "Chris Maloney",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tiarno/mathjax-server/issues"
+    "url": "https://github.com/ncbi/render-math2/issues"
   },
-  "homepage": "https://github.com/tiarno/mathjax-server",
+  "homepage": "https://github.com/ncbi/render-math2",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "commander": "^2.9.0",
-    "mathjax-node": "^0.4.0"
+    "mathjax-node": "^0.4.0",
+    "ramda": "^0.23.0",
+    "winston": "^2.3.0"
   }
 }

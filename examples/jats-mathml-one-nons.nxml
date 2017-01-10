@@ -1,0 +1,57 @@
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Archiving and Interchange DTD v2.3 20070202//EN" "archivearticle.dtd">
+<article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML"
+  article-type="research-article" xml:lang="EN">
+  <front>
+    <article-meta/>
+  </front>
+  <body>
+    <math id="M1" xmlns="http://www.w3.org/1998/Math/MathML">
+      <mi>&#x003d5;</mi>
+      <mo>=</mo>
+      <mrow>
+        <mrow>
+          <msub>
+            <mi>B</mi>
+            <mrow>
+              <mo>max</mo>
+            </mrow>
+          </msub>
+          <msup>
+            <mrow>
+              <mrow>
+                <mo>(</mo>
+                <mi>L</mi>
+                <mo>)</mo>
+              </mrow>
+            </mrow>
+            <mi>n</mi>
+          </msup>
+        </mrow>
+        <mo>/</mo>
+        <mrow>
+          <mrow>
+            <mo>[</mo>
+            <mrow>
+              <msup>
+                <mrow>
+                  <mrow>
+                    <mo>(</mo>
+                    <mi>L</mi>
+                    <mo>)</mo>
+                  </mrow>
+                </mrow>
+                <mi>n</mi>
+              </msup>
+              <mo>+</mo>
+              <msub>
+                <mi>K</mi>
+                <mi>d</mi>
+              </msub>
+            </mrow>
+            <mo>]</mo>
+          </mrow>
+        </mrow>
+      </mrow>
+    </math>
+  </body>
+</article>
