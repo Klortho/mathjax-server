@@ -18,17 +18,20 @@
     "mathml"
   ],
   "author": "Chris Maloney",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
-    "url": "https://github.com/ncbi/render-math2/issues"
+    "url": "https://github.com/ncbi/rendermath3/issues"
   },
-  "homepage": "https://github.com/ncbi/render-math2",
+  "homepage": "https://github.com/ncbi/rendermath3",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "commander": "^2.9.0",
-    "mathjax-node": "^0.4.0",
+    "mathjax-node": "^0.5.2",
+    "minimatch": "^3.0.3",
+    "fs-extra": "^2.0.0",
+    "query-string": "^4.3.1",
     "ramda": "^0.23.0",
     "winston": "^2.3.0"
   }

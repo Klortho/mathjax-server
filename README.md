@@ -1,9 +1,22 @@
-# render-math-2
+# RenderMath 3
 
-Nodejs server receives JSON post, returns MathJax-rendered version.
+This implementation of RenderMath uses the [mathjax-node
+library](https://github.com/mathjax/mathjax-node).
 
-This project is a server front-end for the MathJax-node library.
-https://github.com/mathjax/mathjax-node
+
+
+
+## Development
+
+```
+git clone https://github.com/ncbi/rendermath2.git
+cd rendermath2
+npm install
+node index.js
+```
+
+
+
 
 ## Installation
 
