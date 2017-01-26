@@ -9,8 +9,8 @@ library](https://github.com/mathjax/mathjax-node).
 ## Development
 
 ```
-git clone https://github.com/ncbi/rendermath2.git
-cd rendermath2
+git clone https://github.com/ncbi/rendermath3.git
+cd rendermath3
 npm install
 node index.js
 ```

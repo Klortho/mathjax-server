@@ -1,21 +1,22 @@
 {
-  "name": "mathjax-server",
-  "version": "1.2.0",
-  "description": "Server listens for POST with MathJax config. Returns rendered version.",
+  "name": "rendermath3",
+  "version": "1.0.0",
+  "description": "PMC RenderMath 3 service",
   "main": "index.js",
   "bin": {
     "rendermath": "index.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tiarno/mathjax-server.git"
+    "url": "https://github.com/ncbi/rendermath3.git"
   },
   "keywords": [
     "latex",
     "math",
     "mathjax",
     "svg",
-    "mathml"
+    "mathml",
+    "pmc"
   ],
   "author": "Chris Maloney",
   "license": "SEE LICENSE IN LICENSE.md",

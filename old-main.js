@@ -262,17 +262,6 @@ function parse_request(req) {
   }
 
 
-  // Parse JATS files
-  if (query.in_format == 'jats') {
-    var jats_formulas = parse_jats(q);
-
-    if (typeof jats_formulas === "string") {
-      query.status_code = 400;
-      query.error = jats_formulas;
-      return query;
-    }
-    query.q = jats_formulas;
-  }
 
   return query;
 }
