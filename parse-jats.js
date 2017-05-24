@@ -1,8 +1,8 @@
 // Usage:
 //
-//   var parse_jats = require('./parse_jats').parse_jats;
+//   var parseJats = require('./parse_jats');
 //   ...
-//   var formulas = parse_jats("...");
+//   var formulas = parseJats("...");
 //
 // This function parses an entire JATS file, and returns an array of objects that looks
 // like this:
@@ -10,13 +10,6 @@
 //   [{id: 'M1', format: 'latex', latex_style: 'display', q: 'n^2'}, {...}]
 //
 // If there's an error, then it will instead return a simple string error message
-//
-// For debugging inside a web browser, use parse_jats.html, and invoke the function
-// with, for example:
-// 
-//   jats='Formulas: <tex-math id="M1">n^2</tex-math> and <math id="M2"><mi>B</mi></math> etc.';
-//   exports.parse_jats(jats);
-
 
 
 // Precompile regular expressions
@@ -27,14 +20,14 @@
 var outer_stag_regexp = new RegExp(
     '<\\s*((disp-formula)|(inline-formula)|(math)|(mml:math)|(tex-math))(>|\\s[\\s\\S]*?>)');
 
-// Same start-tag regex as above, but without disp-formula or inline-formula. Also, 
+// Same start-tag regex as above, but without disp-formula or inline-formula. Also,
 // designed to allow us to throw away whatever came *before* the start tag.
-// After this matches: 
+// After this matches:
 //   0 - Everything before and including the start tag
 //   1 - Everything before the start tag
 //   2 - The complete start tag
 //   3 - The element name
-var inner_stag_regexp = 
+var inner_stag_regexp =
   new RegExp('^([\\s\\S]*?)(<\\s*((math)|(mml:math)|(tex-math))(>|(\\s[\\s\\S]*?>)))');
 
 // Regular expressions for some ending tags
@@ -54,7 +47,7 @@ var id_regexp = new RegExp('\\s+id\\s*=\\s*("|\')(.*?)("|\')');
 // {id: 'M1', format: 'latex', style: 'display', q: 'n^2'}
 var parse_outer_formula = function(stag, elem_name, xml) {
   var latex_style = (elem_name == "disp-formula") ? 'display' : 'text';
-  var formula_xml = 
+  var formula_xml =
     (elem_name == 'disp-formula' || elem_name == 'inline-formula')
       ? strip_formula_wrap(stag, elem_name, xml)
       : xml;
@@ -121,7 +114,7 @@ var parse_formula = function(xml) {
 }
 
 // The main function, that will be exported
-var parse_jats = function(jats) {
+var parseJats = function(jats) {
 
   // Need to find multiple equations in JATS file
   var formulas = [];
@@ -149,6 +142,4 @@ var parse_jats = function(jats) {
   return formulas;
 }
 
-// Here's the one and only exported function
-if (typeof exports === "undefined") { exports = {}; }
-exports.parse_jats = parse_jats;
+module.exports = parseJats;

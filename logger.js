@@ -1,39 +1,39 @@
 /**
- * This module is designed to let you share a single multi-transport logger
+ * This module lets you share a single multi-transport logger
  * among several modules. See http://stackoverflow.com/revisions/17737613/2.
  *
- * The main modules (master and each worker):
+ * Usage:
  *
  *     const logger = require('./logger.js');
  *     logger.setLevel(<level>);
- *
- * Other modules:
- *
- *     const logger = require('winston');
+ *     const log = logger.log;
+ *     log.debug('time waits for no man');
  */
 
-const logger = require('winston');
+const winston = require('winston');
 const defaultLevel = 'info';
 
-logger.configure({
+winston.configure({
   transports: [
-    new (logger.transports.Console)({
+    new (winston.transports.Console)({
       level: defaultLevel,
       colorize: true,
     }),
-    new (logger.transports.File)({
-      filename: 'server.log',
+    new (winston.transports.File)({
       level: defaultLevel,
+      filename: 'rendermath3.log',
     }),
   ],
 });
 
-logger.cli();
-
 // Adding a custom method - this will be invoked from each new worker thread.
-logger.setLevel = function(level) {
-  this.transports.Console.level = level;
-  this.transports.File.level = level;
+const setLevel = function(level) {
+  winston.default.transports.console.level = level;
+  winston.default.transports.file.level = level;
 };
 
-module.exports = logger;
+module.exports = {
+  log: winston,       // for the .log() methods
+  winston: winston,   // an alias, for convenience
+  setLevel: setLevel,
+};

@@ -1,10 +1,15 @@
 const fs = require('fs-extra');
-const logger = require('winston');
+const mjAPI = require('mathjax-node');
 const minimatch = require('minimatch');
 const querystring = require('querystring');
 const R = require('ramda');
 const url = require('url');
 const util = require('util');
+
+const logger = require('./logger.js');
+const parseJats = require('./parse-jats.js');
+
+const log = logger.log;
 
 
 // URL patterns of static files
@@ -89,20 +94,22 @@ class RequestHandler {
   go() {
     this.data = '';
     this.request.on('data', chunk => { this.data += chunk; });
-    this.request.on('end', () => this.processRequest());
+    this.request.on('end', () => {
+      //console.log('In go(), `this` is: ', this);
+      return this.processRequest();
+    });
   }
 
   /**
    * This is called back when the request is complete and ready to process
    */
   processRequest() {
+    const rh = this;
     try {
-      const rh = this;
       const request = rh.request;
-
       const method = rh.method = request.method;
-      logger.info(method + ' ' + request.url);
-      if (method === 'POST') logger.debug('POST data: ', rh.data);
+      log.info(method + ' ' + request.url);
+      if (method === 'POST') log.debug('POST data: ', rh.data);
 
       // Validate the HTTP method
       if (method !== 'GET' && method !== 'POST')
@@ -118,7 +125,7 @@ class RequestHandler {
       // Parse the query string
       const parsed = rh.parsed = querystring.parse(
         method === 'GET' ? urlObj.query : rh.data);
-      logger.debug('Query string, parsed: ' + util.inspect(parsed));
+      log.debug('Query string, parsed: ' + util.inspect(parsed));
 
       // If the URL specifies a static resource, deliver that
       if (rh.doStatic()) return null;
@@ -162,6 +169,9 @@ class RequestHandler {
       // Also look for the opening tag '<article', to determine whether or not this is
       // JATS.  If it's not JATS, and there are no MathML opening tags, then assume it
       // is LaTeX.
+      console.log('testingtestingtestingtestingtesting')
+      log.info('INFO INFO INFO INFO INFO INFO INFO INFO INFO ')
+      log.debug('DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG ')
       const format = inFormat !== 'auto' ? inFormat
         : q.match(jatsStartTag) ? 'jats'
         : q.match(mmlStartTag) ? 'mml'
@@ -191,11 +201,11 @@ class RequestHandler {
         svg: true,
       };
 
-      logger.debug('mjOpts: ' + util.inspect(mjOpts));
+      log.debug('mjOpts: ' + util.inspect(mjOpts));
 
       mjAPI.typeset(mjOpts, function(result) {
         try {
-          logger.debug('MathJax result: ' + util.inspect(result));
+          log.debug('MathJax result: ' + util.inspect(result));
 
           if (result.errors) {
             return rh.badRequest('Conversion failed: ' + result.errors);
@@ -219,14 +229,14 @@ class RequestHandler {
           }
         }
         catch(error) {
-          logger.error('Caught exception trying to typeset: ' + err.stack);
+          log.error('Caught exception trying to typeset: ' + err.stack);
           return rh.respond(500, 'txt', 'Error trying to typeset the equation');
         }
       });
     }
 
     catch(err) {
-      logger.error('Exception during process(): ' + err.stack);
+      log.error('Exception during process(): ' + err.stack);
       return rh.badRequest('Sorry, I can\'t seem to decipher this request.');
     }
 
@@ -267,7 +277,7 @@ class RequestHandler {
       }
       catch(err) {
         const msg = 'An error occurred trying to serve a static resource';
-        logger.error(msg + ': ' + err.stack);
+        log.error(msg + ': ' + err.stack);
         this.badRequest(msg);
         return true;
       }

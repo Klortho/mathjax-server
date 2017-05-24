@@ -12,16 +12,28 @@ const url = require('url');
 const util = require('util');
 
 const logger = require('./logger.js');
+const log = logger.log;
 const RequestHandler = require('./request-handler.js');
-const parseJats = require('./parse-jats.js').parseJats;
 const VERSION = require('./package.json').version;
 const numCPUs = os.cpus().length;
+
+
+
+process.on('uncaughtException', function(err) {
+  // the function callback here ensures that all the logs are flushed
+  log.error('Unexpected fatal exception!\n', err,
+    function(err, level, msg, meta) {
+      log.error('bye');
+      process.exit(1);
+    }
+  );
+});
 
 /**
  * Instantiate the MathJax wrapper object.
  */
 const startMathJax = function(opts) {
-  logger.info('Starting MathJax processor');
+  log.info('Starting MathJax processor');
 /*
   mjAPI.config({
     MathJax: {
@@ -57,7 +69,6 @@ const startMathJax = function(opts) {
     },
     extensions: '',
   });
-
   mjAPI.start();
 };
 
@@ -68,7 +79,8 @@ var server  = null;
 const dispatchRequest = (request, response) => {
   var d = domain.create();
   d.on('error', function(err) {
-    logger.error(err.stack);
+    log.error(err.stack);
+
     // See the node.js domain documentation for a description of what the
     // following code does (https://nodejs.org/api/domain.html).
     try {
@@ -83,7 +95,7 @@ const dispatchRequest = (request, response) => {
       response.end('An unknown error occurred, please try again.\n');
     }
     catch (err2) {
-      logger.error('Error, sending 500.', err2.stack);
+      log.error('Error, sending 500.', err2.stack);
     }
   });
   d.add(request);
@@ -100,14 +112,14 @@ const dispatchRequest = (request, response) => {
  * Instantiates an HTTP server
  */
 const createServer = function(opts) {
-  logger.info('createServer: opts: ' + util.inspect(opts));
+  log.info('createServer: opts: ' + util.inspect(opts));
   if (opts.logLevel) logger.setLevel(opts.logLevel);
 
   startMathJax(opts);
 
   server = http.createServer(dispatchRequest);
   server.listen(opts.port, function() {
-    logger.info('Server listening on port %s' , opts.port);
+    log.info('Server listening on port %s' , opts.port);
   });
   return server;
 };
@@ -117,18 +129,18 @@ const createServer = function(opts) {
  * process.
  */
 const masterMain = function() {
-  logger.debug(`Master (pid ${process.pid}) starting...`);
+  log.debug(`Master (pid ${process.pid}) starting...`);
   const opts = MJS.parseOpts();
 
   const numWorkers = Math.min(opts.workers, numCPUs);
-  logger.debug(`We will spawn ${numWorkers} worker(s).`);
+  log.debug(`We will spawn ${numWorkers} worker(s).`);
 
   /**
    * Helper function for master, to spawn a new child worker.
    */
   const spawnWorker = function() {
     const worker = cluster.fork();
-    logger.debug(`Spawning worker ${worker.id}`);
+    log.debug(`Spawning worker ${worker.id}`);
     worker.send(opts);
     return worker;
   };
@@ -137,12 +149,12 @@ const masterMain = function() {
   R.range(0, numWorkers).map(spawnWorker);
 
   cluster.on('disconnect', worker => {
-    logger.error(`Worker ${worker.id} disconnected.`);
+    log.error(`Worker ${worker.id} disconnected.`);
     spawnWorker();
   });
 
   cluster.on('exit', (worker, code, signal) => {
-    logger.error(`Worker ${worker.id} died.`);
+    log.error(`Worker ${worker.id} died.`);
   });
 };
 
@@ -150,7 +162,7 @@ const masterMain = function() {
  * Main entry point for workers.
  */
 const workerMain = function() {
-  logger.info(`Worker ${cluster.worker.id} starting...`);
+  log.info(`Worker ${cluster.worker.id} starting...`);
   process.on('message', createServer);
 };
 
@@ -177,9 +189,9 @@ const parseOpts = function() {
   const props = ['port', 'requests', 'workers', 'logLevel'];
   if (program.logLevel) logger.setLevel(program.logLevel);
 
-  logger.info(`This is PMC MathJax server, version ${program.version()}`);
+  log.info(`This is PMC MathJax server, version ${program.version()}`);
   props.forEach(prop => {
-    logger.info(`  ${prop}: ${program[prop]}`);
+    log.info(`  ${prop}: ${program[prop]}`);
   });
   return R.pick(props, program);
 };
