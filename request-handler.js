@@ -6,10 +6,9 @@ const R = require('ramda');
 const url = require('url');
 const util = require('util');
 
-const logger = require('./logger.js');
+const logger = require('winston');
+const clientTemplate = require('./client-template.js');
 const parseJats = require('./parse-jats.js');
-
-const log = logger.log;
 
 
 // URL patterns of static files
@@ -108,8 +107,8 @@ class RequestHandler {
     try {
       const request = rh.request;
       const method = rh.method = request.method;
-      log.info(method + ' ' + request.url);
-      if (method === 'POST') log.debug('POST data: ', rh.data);
+      logger.info(method + ' ' + request.url);
+      if (method === 'POST') logger.debug('POST data: ', rh.data);
 
       // Validate the HTTP method
       if (method !== 'GET' && method !== 'POST')
@@ -125,7 +124,7 @@ class RequestHandler {
       // Parse the query string
       const parsed = rh.parsed = querystring.parse(
         method === 'GET' ? urlObj.query : rh.data);
-      log.debug('Query string, parsed: ' + util.inspect(parsed));
+      logger.debug('Query string, parsed: ' + util.inspect(parsed));
 
       // If the URL specifies a static resource, deliver that
       if (rh.doStatic()) return null;
@@ -169,13 +168,11 @@ class RequestHandler {
       // Also look for the opening tag '<article', to determine whether or not this is
       // JATS.  If it's not JATS, and there are no MathML opening tags, then assume it
       // is LaTeX.
-      console.log('testingtestingtestingtestingtesting')
-      log.info('INFO INFO INFO INFO INFO INFO INFO INFO INFO ')
-      log.debug('DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG ')
       const format = inFormat !== 'auto' ? inFormat
         : q.match(jatsStartTag) ? 'jats'
         : q.match(mmlStartTag) ? 'mml'
         : 'latex';
+      logger.debug('format: ', format);
 
       // FIXME: do we still need this?
       // PMC-29429 - filter processing instructions out of MML equations
@@ -183,7 +180,9 @@ class RequestHandler {
 
       // Parse JATS files
       if (format === 'jats') {
+        logger.debug('calling parseJats');
         var jatsFormulas = parseJats(q);
+        logger.debug('jatsFormulas: ', jatsFormulas);
 
         if (typeof jatsFormulas === "string") {
           return rh.badRequest(jatsFormulas);
@@ -201,11 +200,11 @@ class RequestHandler {
         svg: true,
       };
 
-      log.debug('mjOpts: ' + util.inspect(mjOpts));
+      logger.debug('mjOpts: ' + util.inspect(mjOpts));
 
       mjAPI.typeset(mjOpts, function(result) {
         try {
-          log.debug('MathJax result: ' + util.inspect(result));
+          logger.debug('MathJax result: ' + util.inspect(result));
 
           if (result.errors) {
             return rh.badRequest('Conversion failed: ' + result.errors);
@@ -229,19 +228,17 @@ class RequestHandler {
           }
         }
         catch(error) {
-          log.error('Caught exception trying to typeset: ' + err.stack);
+          logger.error('Caught exception trying to typeset: ' + err.stack);
           return rh.respond(500, 'txt', 'Error trying to typeset the equation');
         }
       });
     }
 
     catch(err) {
-      log.error('Exception during process(): ' + err.stack);
+      logger.error('Exception during process(): ' + err.stack);
       return rh.badRequest('Sorry, I can\'t seem to decipher this request.');
     }
-
   }
-
 
   /**
    * Checks to see if this is a valid request for a static resource. If so,
@@ -255,6 +252,7 @@ class RequestHandler {
         Object.keys(this.parsed).length > 0) return false;
 
     const _path = this.urlObj.pathname || '/';
+    console.log('_path: ', _path);
     const realPath = _path === '/' ? '/home.html' : _path;
 
     if (!staticGlobs.find(glob => minimatch(realPath, glob))) return false;
@@ -277,7 +275,7 @@ class RequestHandler {
       }
       catch(err) {
         const msg = 'An error occurred trying to serve a static resource';
-        log.error(msg + ': ' + err.stack);
+        logger.error(msg + ': ' + err.stack);
         this.badRequest(msg);
         return true;
       }
@@ -300,7 +298,8 @@ class RequestHandler {
           cTypeHeader = cType + (encoding === '' ? '' : `; charset=${encoding}`);
 
     response.writeHead(status, {'Content-Type': cTypeHeader});
-    response.write(content);
+    // FIXME: need client template here
+    response.write("<html><body>you win!</body></html>");
     response.end();
     return null;
   }

@@ -1,0 +1,72 @@
+<!--
+  This is the template for the HTML file that is sent back to the client,
+  when the input is a JATS file.
+-->
+
+<html xmlns:mml="http://www.w3.org/1998/Math/MathML">
+  <head>
+    <script type="text/javascript"
+      src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.js"></script>
+
+    <!-- This gets the real MathJax URL at runtime. -->
+    <script src="$mathjax_url"></script>
+
+    <!-- MathJax should only render equations that appear inside the main table -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        elements: ['table']
+      });
+    </script>
+
+    <style type='text/css'>
+      table {
+        border-collapse: collapse;
+      }
+      th, td {
+        border: solid 1px black;
+        padding: .3em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RenderMath - client rendering</h1>
+    <p>Equations:</p>
+    <table id='table'>
+      <tr>
+        <th>Image ID</th>
+        <th>Math type</th>
+        <th>Rendered equation</th>
+      </tr>
+<!-- rows -->
+    </table>
+    <div id='sources' style='display: none;'>
+<!-- sources -->
+    </div>
+
+    <script>
+      MathJax.Hub.queue.Push(function () {
+        $('#sources div').each(function(i, s) {
+          var $s = $(s);
+          var rid = $s.attr("data-rid");
+          var format = $s.attr("data-format");
+          var content;
+          if (format == 'mml') {
+            // For MathML, MathJax seems to be able to handle serialized
+            // XML -- it parses it for us.
+            content = s.textContent;
+          }
+          else {
+            // LaTeX is different. In the JATS file, it appears as an
+            // XML-escaped string. To sanitize it, this service xml-escapes
+            // it again before sending it to the client, so it is
+            // double-escaped. The browser gets rid of the second escaping.
+            // To get rid of the first, we let jQuery parse it into a set
+            // of DOM nodes, and then take the text value of that.
+            content = $($.parseHTML(s.textContent)).text();
+          }
+          MathJax.Hub.getAllJax(rid)[0].Text(content);
+        });
+      });
+    </script>
+  </body>
+</html>

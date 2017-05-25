@@ -5,7 +5,7 @@ library](https://github.com/mathjax/mathjax-node).
 
 
 
-## Development
+To run it:
 
 ```
 git clone https://github.com/ncbi/rendermath3.git
@@ -14,30 +14,23 @@ npm install
 node index.js
 ```
 
+## API
 
+Make requests to the service with either GET or POST. When making POST
+requests, the parameters must be encoded as x-www-form-urlencoded.
 
+The parameters this service understands are:
 
+* `q` - The content of the math formula or JATS file
+* `in-format` - One of 'latex', 'mml', 'jats', or 'auto'. The default is
+  'auto'.
+* `latex-style` - If the input is a LaTeX formula, this specifies whether
+  it should be rendered in text (inline) or display (block) mode
+* `width` - Maximum width for the equations
 
-## index.js
-
-Server listens for POST requests containing MathJax configuration and math as a string. Returns rendered math.
-
-The input math string can be in LaTeX or MathML. The output rendering can be SVG, PNG, or MathML. Additionally, you can specify that speech text rendering is added as alt text.
-
-See the documentation for Mathjax-node for more information on PNG outputs.
-
-The JSON data to post to the server contains the following keys.
-
-- `format`: Specifies the format of the math you are sending. Values can be `MathML`, `TeX`, or `inline-TeX`.
-- `math`: Specifies the math expression to be rendered.
-- `svg`: Specifies whether to return the math rendered as an SVG image.
-- `mml`: Specifies whether to return the math rendered in MathML.
-- `png`: Specifies whether to return the math rendered as a PNG image.
-- `dpi`: Specifies the dpi for the image when requesting PNG.
-- `speakText`: Specifies whether to provide a readable version of the math as `alt` text in the rendered version.
-- `ex`: Specifies x-height in pixels.
-- `width`: Specifies maximum width for rendered image.
-- `linebreaks`: Specifies whether to allow lines to break.
+Note that MathML can be provided with a namespace prefix or without one.
+But, if it is provided with a namespace prefix, then that prefix
+***must be "mml:"***. No other namespace prefix will work.
 
 
 ## To do
@@ -45,3 +38,4 @@ The JSON data to post to the server contains the following keys.
 * The original version of mathjax-server let you output PNG or MathML in
   addition to SVG. It even had speech output! Can we get those back in
   easily?
+* Should we allow specifying "x-height" for the image?
