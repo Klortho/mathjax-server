@@ -150,7 +150,7 @@ class RenderMath3 {
   startMathJax() {
     logger.info('Starting MathJax processor');
     logger.log('silly', 'this.config: ', this.config);
-    mjAPI.config(this.config.mathjax);
+    mjAPI.config(this.config.mjConfigUrl);
     mjAPI.start();
   }
 
