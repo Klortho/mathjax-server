@@ -13,30 +13,32 @@ module.exports = {
     },
   },
 
-  _mathjaxConfigFilename: {
-    // The main MathJax library will have a URL like
-    // https://www.ncbi.nlm.nih.gov/core/mathjax/2.5/MathJax.js
-    lib: {
-      base: 'https://www.ncbi.nlm.nih.gov/core/mathjax',
-      version: '2.6.1',
-      url: C1(X=> {
-        const me = X._mathjaxConfigFilename.lib;
-        return `${me.base}/${me.version}/MathJax.js`;
-      }),
-    },
 
-    // The config script URL is something like
-    // /corehtml/pmc/js/mathjax-config-classic.3.4.js
-    config: {
-      base: '/corehtml/pmc/js',
-      scope: 'classic',
-      version: '3.4',
-      url: C1(X=> {
-        const me = X._mathjaxConfigFilename.config;
-        return `${me.base}/mathjax-config-${me.scope}.${me.version}.js`;
-      }),
-    },
+  // The main MathJax library will have a URL like
+  // https://www.ncbi.nlm.nih.gov/core/mathjax/2.5/MathJax.js
+  mjLib: {
+    base: 'https://www.ncbi.nlm.nih.gov/core/mathjax',
+    version: '2.6.1',
   },
+  mjLibUrl: C1(X=> {
+    const d = X.mjLib;
+    return `${d.base}/${d.version}/MathJax.js`;
+  }),
+
+  mjConfig: {
+    base: 'https://www.ncbi.nlm.nih.gov/corehtml/pmc/js',
+    scope: 'classic',
+    version: '3.4',
+  },
+  mjConfigUrl: C1(X=> {
+    const d = X.mjConfig;
+    return `${d.base}/mathjax-config-${d.scope}.${d.version}.js`;
+  }),
+
+  mathjaxUrl: C1(X=> {
+    const url = `${X.mjLibUrl}?config=${X.mjConfigUrl}`;
+    return url;
+  }),
 
   logger: {
     transports: [

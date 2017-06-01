@@ -13,6 +13,7 @@ const url = require('url');
 const util = require('util');
 const winston = require('winston');
 
+const clientTemplate = require('./client-template.js');
 const RequestHandler = require('./request-handler.js');
 const VERSION = require('./package.json').version;
 const numCPUs = os.cpus().length;
@@ -62,7 +63,7 @@ class RenderMath3 {
     logger.info(`This is PMC MathJax server, version ${program.version()}`);
     logger.info(`Master (pid ${process.pid}) starting...`);
     logger.debug('Command line args: ', args);
-    //logger.debug('Config: ' + C1.ppString(this.config));
+    logger.debug('Config: ' + C1.ppString(this.config));
 
     this.spawnWorkers();
 
@@ -79,6 +80,7 @@ class RenderMath3 {
     logger.info(`Worker ${cluster.worker.id} starting...`);
     process.on('message', cfg => {
       this.config = cfg;
+      clientTemplate.initialize(cfg.mathjaxUrl);
       this.configureLogger();
       this.startMathJax();
       this.createServer()

@@ -7,7 +7,7 @@ const url = require('url');
 const util = require('util');
 
 const logger = require('winston');
-const clientTemplate = require('./client-template.js');
+const clientTable = require('./client-template.js').clientTable;
 const parseJats = require('./parse-jats.js');
 
 
@@ -182,12 +182,14 @@ class RequestHandler {
       if (format === 'jats') {
         logger.debug('calling parseJats');
         var jatsFormulas = parseJats(q);
+        logger.debug('typeof jatsFormulas: ', typeof jatsFormulas);
         logger.debug('jatsFormulas: ', jatsFormulas);
 
         if (typeof jatsFormulas === "string") {
           return rh.badRequest(jatsFormulas);
         }
-        return rh.respond(200, 'html', jatsFormulas);
+        const content = clientTable(jatsFormulas, params.width);
+        return rh.respond(200, 'html', content);
       }
 
       // Convert rendermath params to mathjax-node conventions
@@ -298,8 +300,7 @@ class RequestHandler {
           cTypeHeader = cType + (encoding === '' ? '' : `; charset=${encoding}`);
 
     response.writeHead(status, {'Content-Type': cTypeHeader});
-    // FIXME: need client template here
-    response.write("<html><body>you win!</body></html>");
+    response.write(content);
     response.end();
     return null;
   }
