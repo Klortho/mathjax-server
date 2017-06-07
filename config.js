@@ -5,7 +5,7 @@ const C1 = require('config-one');
 module.exports = {
   workers: 1,
   port: 16000,
-  logLevel: 'info',
+  logLevel: 'debug',
 
 /* We could configure MathJax here, but instead we'll use the same config
    file as PMC (fetched over HTTP).

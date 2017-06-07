@@ -26,7 +26,6 @@ const logger = winston;
 // FIXME: temporary for debugging
 winston.default.transports.console.level = 'debug';
 
-
 process.on('uncaughtException', function(err) {
   // the function callback here ensures that all the logs are flushed
   logger.error('Unexpected fatal exception!\n', err,
@@ -37,121 +36,15 @@ process.on('uncaughtException', function(err) {
   );
 });
 
-///////////////////////////////////////////////////////
 
 class RenderMath3 {
-  constructor() {
-    this.isMaster = cluster.isMaster;
+  constructor(config) {
+    this.config = config;
+    clientTemplate.initialize(config.mathjaxUrl);
   }
 
-  main() {
-    if (this.isMaster) this.masterMain();
-    else this.workerMain();
-  }
-
-  /**
-   * Main entry point, when this is accessed from command line, for the master
-   * process.
-   */
-  masterMain() {
-
-    const args = this.parseArgs();
-    const defaults = C1();
-    this.config = C1.extend(defaults, args);
-
-    this.configureLogger();
-    logger.info(`This is PMC MathJax server, version ${program.version()}`);
-    logger.info(`Master (pid ${process.pid}) starting...`);
-    logger.debug('Command line args: ', args);
-    logger.debug('Config: ' + C1.ppString(this.config));
-
-    this.spawnWorkers();
-
-    cluster.on('disconnect', worker => {
-      logger.error(`Worker ${worker.id} disconnected. Spawning another.`);
-      this.spawnWorker();
-    });
-    cluster.on('exit', worker => {
-      logger.error(`Worker ${worker.id} died.`);
-    });
-  }
-
-  workerMain() {
-    logger.info(`Worker ${cluster.worker.id} starting...`);
-    process.on('message', cfg => {
-      this.config = cfg;
-      clientTemplate.initialize(cfg.mathjaxUrl);
-      this.configureLogger();
-      this.startMathJax();
-      this.createServer()
-    });
-  }
-
-  /**
-   * Parse the command-line options. This is done only by the master process.
-   * The args get merged with config, and passed to each worker as a message.
-   */
-  parseArgs() {
-    program
-      .version('0.9.0')
-      .option('-p, --port [num]',
-        'IP port on which to start the server')
-      .option(`--workers [${numCPUs}]`,
-        'Allow at most this many forks. Default is the number of processors in ' +
-        `this machine.`)
-      .option('-l, --log-level [level]',
-        'Set the log level to one of "silly", "debug", "verbose", "info", ' +
-        '"warn", or "error".')
-      .parse(process.argv);
-
-    const props = ['port', 'requests', 'workers', 'logLevel'];
-
-    const args = R.pick(props, program);
-    logger.log('silly', `args: ${args}`);
-    return args;
-  };
-
-  /**
-   * Configures Winston's default logger.
-   */
-  configureLogger() {
-    winston.configure({
-      transports: this.config.logger.transports.map(tcfg =>
-        new winston.transports[tcfg.className](tcfg.config)
-      ),
-    });
-  }
-
-  spawnWorker() {
-    if (!this.isMaster) return;
-    const worker = cluster.fork();
-    logger.debug(`Spawning worker ${worker.id}`);
-    worker.send(this.config);
-    return worker;
-  }
-
-  spawnWorkers() {
-    if (!this.isMaster) return;
-    const reqWorkers = this.config.workers;
-    const numWorkers = Math.min(reqWorkers, numCPUs);
-    logger.debug(`We will spawn ${numWorkers} worker(s).`);
-    if (numWorkers != reqWorkers) {
-      logger.info(`You requested ${reqWorkers} workers, but only ` +
-        `${numWorkers} will be spawned, because of the number of available ` +
-        `CPUs.`);
-    }
-    // Fork workers.
-    R.range(0, numWorkers).forEach(i => this.spawnWorker());
-  }
-
-  /**
-   * Instantiate the MathJax wrapper object.
-   */
-  startMathJax() {
-    logger.info('Starting MathJax processor');
-    logger.log('silly', 'this.config: ', this.config);
-    mjAPI.config(this.config.mjConfigUrl);
-    mjAPI.start();
+  version() {
+    return VERSION;
   }
 
   /**
@@ -199,8 +92,126 @@ class RenderMath3 {
   }
 }
 
+/**
+ * Main entry point, when this is accessed from command line, for both
+ * master and worker processes.
+ */
+const main = RenderMath3.main = function() {
+  return cluster.isMaster ? masterMain() : workerMain();
+}
+
+/** Main entry point when this is the master process */
+const masterMain = RenderMath3.masterMain = function() {
+  const args = parseArgs();
+  const defaults = C1();
+  const config = C1.extend(defaults, args);
+  configureLogger(config.logger);
+
+  logger.info(`This is PMC MathJax server, version ${program.version()}`);
+  logger.info(`Master (pid ${process.pid}) starting...`);
+  logger.debug('Command line args: ', args);
+  logger.debug('Config: ' + C1.ppString(config));
+
+  spawnWorkers(config);
+
+  cluster.on('disconnect', worker => {
+    logger.error(`Worker ${worker.id} disconnected. Spawning another.`);
+    this.spawnWorker();
+  });
+  cluster.on('exit', worker => {
+    logger.error(`Worker ${worker.id} died.`);
+  });
+}
+
+/** Main entry point for the worker processes */
+const workerMain = RenderMath3.workerMain = function() {
+  logger.info(`Worker ${cluster.worker.id} starting...`);
+  process.on('message', config => {
+    configureLogger(config.logger);
+    startMathJax(config.mjConfig);
+    const rm3 = new RenderMath3(config);
+    rm3.createServer();
+  });
+}
+
+/**
+ * Parse the command-line options. This is done only by the master process.
+ * The args get merged with config, and passed to each worker as a message.
+ */
+const parseArgs = RenderMath3.parseArgs = function() {
+  program
+    .version('0.9.0')
+    .option('-p, --port [num]',
+      'IP port on which to start the server')
+    .option(`--workers [${numCPUs}]`,
+      'Allow at most this many forks. Default is the number of processors in ' +
+      `this machine.`)
+    .option('-l, --log-level [level]',
+      'Set the log level to one of "silly", "debug", "verbose", "info", ' +
+      '"warn", or "error".')
+    .parse(process.argv);
+
+  const props = ['port', 'requests', 'workers', 'logLevel'];
+  const args = R.pick(props, program);
+  //console.log('args: ', args);
+  return args;
+};
+
+/**
+ * Configures Winston's default logger.
+ */
+const configureLogger = RenderMath3.configureLogger = function(logCfg) {
+  winston.configure({
+    //transports: this.config.logger.transports.map(tcfg =>
+    transports: logCfg.transports.map(tcfg =>
+      new winston.transports[tcfg.className](tcfg.config)
+    ),
+  });
+};
+
+/**
+* Configure the MathJax interface, and start it. Like the logger, this is a
+* singleton.
+*/
+const startMathJax = RenderMath3.startMathJax = function(mjCfg) {
+ logger.info('Starting MathJax processor');
+ logger.debug('  with config: ', mjCfg);
+ mjAPI.config(mjCfg);
+ mjAPI.start();
+};
+
+/**
+ * Spawn a single worker thread.
+ */
+const spawnWorker = RenderMath3.spawnWorker = function(config) {
+  if (!cluster.isMaster) return;
+  const worker = cluster.fork();
+  logger.debug(`Spawning worker ${worker.id}`);
+  worker.send(config);
+  return worker;
+};
+
+/**
+ * Spawn a collection of worker threads.
+ */
+const spawnWorkers = RenderMath3.spawnWorkers = function(config) {
+  if (!cluster.isMaster) return;
+  const reqWorkers = config.workers;
+  const numWorkers = Math.min(reqWorkers, numCPUs);
+  logger.debug(`We will spawn ${numWorkers} worker(s).`);
+  if (numWorkers != reqWorkers) {
+    logger.info(`You requested ${reqWorkers} workers, but only ` +
+      `${numWorkers} will be spawned, because of the number of available ` +
+      `CPUs.`);
+  }
+  // Fork workers.
+  R.range(0, numWorkers).forEach(i => spawnWorker(config));
+};
+
+
 ///////////////////////////////////////////////////////
 if (require.main === module) {
-  const rm3 = new RenderMath3();
-  rm3.main();
+  main();
 }
+
+module.exports = RenderMath3;
