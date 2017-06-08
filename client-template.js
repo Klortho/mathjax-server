@@ -1,3 +1,5 @@
+"use strict";
+
 const fs = require('fs');
 const logger = require('winston');
 const log = logger.log;

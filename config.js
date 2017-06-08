@@ -1,20 +1,12 @@
+"use strict";
+
 const C1 = require('config-one');
 
 // Default configuration
-
 module.exports = {
   workers: 1,
   port: 16000,
   logLevel: 'debug',
-
-/* We could configure MathJax here, but instead we'll use the same config
-   file as PMC (fetched over HTTP).
-  mathjax: {
-    SVG: {
-      font: 'STIX-Web',
-    },
-  },
-*/
 
   // The main MathJax library will have a URL like
   // https://www.ncbi.nlm.nih.gov/core/mathjax/2.5/MathJax.js
@@ -26,7 +18,6 @@ module.exports = {
     const d = X.mjLib;
     return `${d.base}/${d.version}/MathJax.js`;
   }),
-
 
   mjConfig: {
     base: 'https://www.ncbi.nlm.nih.gov/corehtml/pmc/js',

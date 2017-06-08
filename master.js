@@ -1,3 +1,5 @@
+"use strict";
+
 const cluster = require('cluster');
 const os = require('os');
 const R = require('ramda');
@@ -21,7 +23,6 @@ function main(config) {
   cluster.on('exit', workerProcess => {
     logger.error(`Worker ${workerProcess.id} died.`);
   });
-
 }
 
 /**

@@ -1,7 +1,8 @@
 /**
  * This module is just a very thin wrapper around winston. It adds
- * a method to facilitate configuring it late.
+ * a method reconfig(), to facilitate configuring it late.
  */
+"use strict";
 
 const winston = require('winston');
 

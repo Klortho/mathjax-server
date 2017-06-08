@@ -1,3 +1,5 @@
+"use strict";
+
 // Usage:
 //
 //   var parseJats = require('./parse_jats');

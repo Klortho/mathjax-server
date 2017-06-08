@@ -1,6 +1,5 @@
 "use strict";
 
-
 const assert = require('assert');
 const C1 = require('config-one');
 const fs = require('fs');

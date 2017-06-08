@@ -1,3 +1,5 @@
+"use scrict";
+
 const cluster = require('cluster');
 const mjAPI = require("mathjax-node");
 

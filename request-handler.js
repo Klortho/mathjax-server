@@ -1,3 +1,5 @@
+"use strict";
+
 const fs = require('fs-extra');
 const mjAPI = require('mathjax-node');
 const minimatch = require('minimatch');
@@ -6,10 +8,9 @@ const R = require('ramda');
 const url = require('url');
 const util = require('util');
 
-const logger = require('winston');
 const clientTable = require('./client-template.js').clientTable;
+const logger = require('winston');
 const parseJats = require('./parse-jats.js');
-
 
 // URL patterns of static files
 const staticGlobs = [

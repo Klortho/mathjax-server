@@ -1,16 +1,13 @@
+"use strict";
+
+const cluster = require('cluster');
 const domain = require('domain');
 const http = require('http');
 
 const logger = require('./logger.js');
 const RequestHandler = require('./request-handler.js');
 
-var server = null;
-
 class Server {
-
-  /**
-   * Instantiates an HTTP server
-   */
   constructor(config) {
     this.config = config;
     this.server = http.createServer((req, res) => this.dispatchRequest(req, res));
