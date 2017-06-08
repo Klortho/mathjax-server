@@ -69,98 +69,98 @@ const fileTypes = {
   },
 };
 
+// Get the file type object, given an extension
 const getFileType = ext => ext in fileTypes ? fileTypes[ext] :
   { contentType: 'application/octet-stream', encoding: 'utf-8', }
 
+// Valid values for the `in-format` parameter
+const inFormats = ['auto', 'mml', 'latex', 'jats'];
 
+// Valid values for `latex-style`
+const latexStyles = ['text', 'display'];
 
 /**
- * This class defines a wrapper object for a single HTTP request
+ * A RequestHandler object is a wrapper for a single HTTP request
  */
 class RequestHandler {
 
-  /**
-   * Constructor instantiates the object.
-   */
   constructor(request, response) {
     this.request = request;
     this.response = response;
   }
 
   /**
-   * The main method -- sets the event callbacks.
+   * The main method -- sets the event callbacks to collect the incoming data
    */
   go() {
-    this.data = '';
-    this.request.on('data', chunk => { this.data += chunk; });
+    this.requestContent = '';
+    this.request.on('data', chunk => { this.requestContent += chunk; });
     this.request.on('end', () => {
-      //console.log('In go(), `this` is: ', this);
       return this.processRequest();
     });
   }
 
   /**
-   * This is called back when the request is complete and ready to process
+   * This is called when the request is complete and ready to process
    */
   processRequest() {
-    const rh = this;
+    const self = this;
     try {
-      const request = rh.request;
-      const method = rh.method = request.method;
-      logger.info(method + ' ' + request.url);
-      if (method === 'POST') logger.debug('POST data: ', rh.data);
-
-      // Validate the HTTP method
-      if (method !== 'GET' && method !== 'POST')
-        return rh.badRequest('Method not supported');
-
-      // Validate a POST request's payload
-      if (method === 'POST' && rh.data.length === 0)
-        return rh.badRequest('Missing POST content');
+      const request = self.request;
+      const method = request.method;
+      logger.info(`${method} ${request.url}`);
 
       // Parse the URL
-      const urlObj = rh.urlObj = url.parse(request.url);
+      const urlObj = self.urlObj = url.parse(request.url);
 
-      // Parse the query string
-      const parsed = rh.parsed = querystring.parse(
-        method === 'GET' ? urlObj.query : rh.data);
-      logger.debug('Query string, parsed: ' + util.inspect(parsed));
+      if (method === 'GET') {
+        self.paramStr = urlObj.query;
+      }
+      else if (method === 'POST') {
+        // Verify that there is some POST content
+        if (self.requestContent.length === 0)
+          return self.badRequest('Missing POST content');
+        logger.debug('POST content: ', self.requestContent);
+        self.paramStr = self.requestContent;
+      }
+      else {
+        return self.badRequest('Method not supported');
+      }
 
-      // If the URL specifies a static resource, deliver that
-      if (rh.doStatic()) return null;
+      // Handle static resources
+      if (self.handleStatic()) return null;
 
-      // This object includes defaults for query-string param values:
+      // Extract the request params, using these defaults
       const defaults = {
         q: '',
         'in-format': 'auto',
         'latex-style': 'display',
         width: '800',
       };
-      const params = R.merge(defaults, parsed);
+      const parsed = querystring.parse(self.paramStr);
+      const params = self.params = R.merge(defaults, parsed);
+      logger.silly('Params: ' + util.inspect(params));
 
-
-      // validate and normalize
+      // validate all of the params
       const inFormat = params['in-format'];
-      if (!['auto', 'mml', 'latex', 'jats'].find(v => v === inFormat)) {
-        return rh.badRequest('Invalid value for in-format');
+      if (!R.contains(inFormat, inFormats)) {
+        return self.badRequest('Invalid value for in-format');
       }
 
       const latexStyle = params['latex-style'];
-      if (!['text', 'display'].find(v => v === latexStyle)) {
-        return rh.badRequest('Invalid value for latex-style');
+      if (!R.contains(latexStyle, latexStyles)) {
+        return self.badRequest('Invalid value for latex-style');
       }
 
-      const _width = params.width;
-      const width = parseInt(_width);
+      const width = parseInt(params.width);
       if (isNaN(width) || width <= 0) {
-        return rh.badRequest('Invalid value for width');
+        return self.badRequest('Invalid value for width');
       }
 
       const q = params.q;
       if (!q || q.match(/^\s*$/)) {   // no source math
-        return rh.badRequest('No source math detected in input');
+        return self.badRequest('No source math detected in input');
       }
-
 
       // Implement auto-detect.
       // We assume that any XML tag that has the name 'math',
@@ -168,7 +168,7 @@ class RequestHandler {
       // Also look for the opening tag '<article', to determine whether or not this is
       // JATS.  If it's not JATS, and there are no MathML opening tags, then assume it
       // is LaTeX.
-      const format = inFormat !== 'auto' ? inFormat
+      const format = self.format = inFormat !== 'auto' ? inFormat
         : q.match(jatsStartTag) ? 'jats'
         : q.match(mmlStartTag) ? 'mml'
         : 'latex';
@@ -178,67 +178,17 @@ class RequestHandler {
       // PMC-29429 - filter processing instructions out of MML equations
       //query.q = q = q.replace(/<\?[^?]+?\?>/g, '');
 
-      // Parse JATS files
+      // Handle JATS files
       if (format === 'jats') {
-        logger.debug('calling parseJats');
-        var jatsFormulas = parseJats(q);
-        logger.debug('typeof jatsFormulas: ', typeof jatsFormulas);
-        logger.debug('jatsFormulas: ', jatsFormulas);
-
-        if (typeof jatsFormulas === "string") {
-          return rh.badRequest(jatsFormulas);
-        }
-        const content = clientTable(jatsFormulas, params.width);
-        return rh.respond(200, 'html', content);
+        return self.handleJats();
       }
 
-      // Convert rendermath params to mathjax-node conventions
-      const mjOpts = {
-        math: params.q,
-        format: {
-          'mml': 'MathML',
-          'latex': 'TeX',
-        }[format],
-        svg: true,
-      };
-
-      logger.debug('mjOpts: ' + util.inspect(mjOpts));
-
-      mjAPI.typeset(mjOpts, function(result) {
-        try {
-          logger.debug('MathJax result: ' + util.inspect(result));
-
-          if (result.errors) {
-            return rh.badRequest('Conversion failed: ' + result.errors);
-          }
-          else if (result.svg) {
-            return rh.respond(200, 'svg', result.svg);
-          }
-          else if (result.mml) {
-            return rh.respond(200, 'mml', result.mml);
-          }
-          else if (result.png) {
-            // slice(22) starts the encoding (from base64 to binary)
-            // after the base64 header info; viz. "data:image/png;base64"
-            return rh.respond(200, 'png', new Buffer(result.png.slice(22), 'base64'));
-          }
-          else if (result.html) {
-            return rh.respond(200, 'html', result.html);
-          }
-          else {
-            return rh.respond(500, 'txt', 'Sorry, an unknown problem was encountered');
-          }
-        }
-        catch(error) {
-          logger.error('Caught exception trying to typeset: ' + err.stack);
-          return rh.respond(500, 'txt', 'Error trying to typeset the equation');
-        }
-      });
+      // Handle math equations
+      return self.handleEquation();
     }
-
     catch(err) {
       logger.error('Exception during process(): ' + err.stack);
-      return rh.badRequest('Sorry, I can\'t seem to decipher this request.');
+      return self.badRequest('Sorry, I can\'t seem to decipher this request.');
     }
   }
 
@@ -249,12 +199,14 @@ class RequestHandler {
    * If a serious error occurs, this responds with an error page, and returns
    * true.
    */
-  doStatic() {
-    if (this.method !== 'GET' ||
-        Object.keys(this.parsed).length > 0) return false;
+  handleStatic() {
+    if (this.request.method !== 'GET' || (this.paramStr &&
+         typeof this.paramStr === 'string' && this.paramStr.length > 0))
+    {
+      return false;
+    }
 
     const _path = this.urlObj.pathname || '/';
-    console.log('_path: ', _path);
     const realPath = _path === '/' ? '/home.html' : _path;
 
     if (!staticGlobs.find(glob => minimatch(realPath, glob))) return false;
@@ -288,6 +240,14 @@ class RequestHandler {
     return true;
   }
 
+  handleJats() {
+    var jatsFormulas = parseJats(q);
+    if (typeof jatsFormulas === "string") {
+      return self.badRequest(jatsFormulas);
+    }
+    const content = clientTable(jatsFormulas, params.width);
+    return self.respond(200, 'html', content);
+  }
 
   /**
    * Utility function to output a response all in one go.
@@ -303,6 +263,54 @@ class RequestHandler {
     response.write(content);
     response.end();
     return null;
+  }
+
+  /**
+   * Handle an equation - either MathML or TeX
+   */
+  handleEquation() {
+    const self = this;
+    const params = self.params;
+    const format = self.format;
+
+    // Convert rendermath params to mathjax-node conventions
+    const mjOpts = {
+      math: params.q,
+      format: (format === 'mml' ? 'MathML' : 'TeX'),
+      svg: true,
+    };
+    logger.silly(`mjOpts: ${util.inspect(mjOpts)}`);
+
+    mjAPI.typeset(mjOpts, function(result) {
+      try {
+        logger.silly('MathJax result: ' + util.inspect(result));
+
+        if (result.errors) {
+          return self.badRequest('Conversion failed: ' + result.errors);
+        }
+        else if (result.svg) {
+          return self.respond(200, 'svg', result.svg);
+        }
+        else if (result.mml) {
+          return self.respond(200, 'mml', result.mml);
+        }
+        else if (result.png) {
+          // slice(22) starts the encoding (from base64 to binary)
+          // after the base64 header info; viz. "data:image/png;base64"
+          return self.respond(200, 'png', new Buffer(result.png.slice(22), 'base64'));
+        }
+        else if (result.html) {
+          return self.respond(200, 'html', result.html);
+        }
+        else {
+          return self.respond(500, 'txt', 'Sorry, an unknown problem was encountered');
+        }
+      }
+      catch(err) {
+        logger.error('Caught exception trying to typeset: ' + err.stack);
+        return self.respond(500, 'txt', 'Error trying to typeset the equation');
+      }
+    });
   }
 
   /**
