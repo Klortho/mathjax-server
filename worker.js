@@ -20,7 +20,6 @@ function main() {
  */
 function start(config) {
   logger.reconfig(config.logger);
-
   startMathJax(config.mjConfig);
   clientTemplate.initialize(config.mathjaxUrl);
   const server = new Server(config);

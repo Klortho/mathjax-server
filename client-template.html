@@ -9,7 +9,7 @@
       src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.js"></script>
 
     <!-- This gets the real MathJax URL at runtime. -->
-    <script src="$mathjaxUrl"></script>
+    <script src="${mathjaxUrl}"></script>
 
     <!-- MathJax should only render equations that appear inside the main table -->
     <script type="text/x-mathjax-config">
@@ -37,13 +37,15 @@
         <th>Math type</th>
         <th>Rendered equation</th>
       </tr>
-<!-- rows -->
+      ${rows}
     </table>
+
     <div id='sources' style='display: none;'>
-<!-- sources -->
+      ${sources}
     </div>
 
     <script>
+      // Queue up the functions to render the equations
       MathJax.Hub.queue.Push(function () {
         $('#sources div').each(function(i, s) {
           var $s = $(s);

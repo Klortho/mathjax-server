@@ -2,22 +2,21 @@
 
 // Usage:
 //
-//   var parseJats = require('./parse_jats');
+//   var parseJats = require('./parse_jats.js');
 //   ...
 //   var formulas = parseJats("...");
 //
-// This function parses an entire JATS file, and returns an array of objects that looks
+// This function parses an entire JATS file, and returns an array of objects
 // like this:
 //
 //   [{id: 'M1', format: 'latex', latex_style: 'display', q: 'n^2'}, {...}]
 //
-// If there's an error, then it will instead return a simple string error message
-
+// If there's an error, it will return a error message.
 
 // Precompile regular expressions
 
-// Regex to match the starting tag of any formula in a JATS file
-// Note here we're using the [\s\S] trick to get the "dotall" modifier (in Perl, the `s`
+// Regex to match the starting tag of any formula in a JATS file.
+// Uses the [\s\S] trick to get the "dotall" modifier (in Perl, the `s`
 // modifier) in JavaScript.  See http://stackoverflow.com/questions/1068280
 var outer_stag_regexp = new RegExp(
     '<\\s*((disp-formula)|(inline-formula)|(math)|(mml:math)|(tex-math))(>|\\s[\\s\\S]*?>)');
@@ -117,10 +116,12 @@ var parse_formula = function(xml) {
 
 // The main function, that will be exported
 var parseJats = function(jats) {
+  process.stdout.write('\n\n----------------> jats: ' + jats + '\n\n');
 
   // Need to find multiple equations in JATS file
   var formulas = [];
 
+  var stag_match;
   while (stag_match = outer_stag_regexp.exec(jats)) {
     var stag = stag_match[0];
     var elem_name = stag_match[1];

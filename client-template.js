@@ -1,84 +1,77 @@
 "use strict";
 
 const fs = require('fs');
-const logger = require('winston');
-const log = logger.log;
+const R = require('ramda');
 
+const logger = require('./logger.js');
+const htmlUtils = require('./html-utils.js');
 
-// This holds the client HTML file template. It's read in on startup, and saved
-// for rendering jats documents' equations on the client. The exported object
-// will either be `null` (if there was a problem reading the file) or else a
-// string.
+const { htmlElem, elem, div, tr, td, xmlEscape } = htmlUtils;
 
+/**
+ * This holds the HTML template used for rendering JATS equations on the client.
+ */
+const _template = fs.readFileSync('client-template.html', 'utf-8');
+
+var template;
 function initialize(mathjaxUrl) {
-  const _template = fs.readFileSync('client-template.html', 'utf-8');
-  self.template = _template.replace("$mathjaxUrl", mathjaxUrl);
+  template = _template.replace('${mathjaxUrl}', mathjaxUrl);
 }
 
-// Return an HTML page with a table of equations, for rendering on the client
-function clientTable(formulas, width) {
-  //log.info(query.num + ": returning client template");
-  //var formulas = query.q;
-  //var width = query.width || null;
-  var resp_page = self.template;
-
-  var rows = '';
-  formulas.forEach(function(f) {
-      rows += makeRow(f, width);
-  });
-  resp_page = resp_page.replace("<!-- rows -->", rows);
-
-  var sources = '';
-  formulas.forEach(function(f) {
-      sources += makeSource(f);
-  });
-  resp_page = resp_page.replace("<!-- sources -->", sources);
+/**
+ * Return an HTML page with a table of equations, for rendering on the client.
+ */
+const page = (equations, width) => {
+  const rows = equations.map(row(width)).join('\n');
+  const sources = equations.map(source).join('\n');
+  const resp_page = template
+    .replace('${rows}', rows)
+    .replace('${sources}', sources);
 
   return resp_page;
-  //var resp_page = client_template.start + rows + client_template.end;
-  //resp.setHeader('Content-type', 'text/html; charset=utf-8');
-  //resp.write(resp_page);
-  //resp.close();
 }
 
-// Make one row of the table
-function makeRow(f, width) {
-  var format = f.format == 'mml' ? "MathML" : "LaTeX, " + f.latex_style;
+/**
+ * Curried function that makes one row of the table for a given page.
+ */
+const row = R.curry((width, eq) => {
+  const format = eq.format === 'mml' ? "MathML" : "LaTeX, " + eq.latex_style;
 
-  var formula = f.format == 'mml' ? '<math />' :
-                f.latex_style == 'text' ? '\\(\\)'
-                                        : '\\[\\]';
+  // We'll populate each cell, initially, with an empty equation of the right type
+  const empty =
+            eq.format === 'mml' ? '<math />'
+    : eq.latex_style === 'text' ? '\\(\\)'
+                                : '\\[\\]';
 
-  var formula_cell = width ?
-      "<div id='" + f.id + "-div' style='width: " + width + "px;'>" + formula + "</div>" :
-      "<div id='" + f.id + "-div'>" + formula + "</div>";
+  return tr(
+    td(eq.id),
+    td(format),
+    td(
+      div(
+        { id: eq.id + '-div',
+          style: width ? `width: ${width}px;` : '', },
+        empty
+      )
+    )
+  );
+});
 
-  return "<tr>\n" +
-         "  <td>" + f.id + "</td>\n" +
-         "  <td>" + format + "</td>\n" +
-         "  <td>" + formula_cell + "</td>\n" +
-         "</tr>\n";
-}
+/**
+ * Returns the source div for a single equation.
+ */
+const source = eq =>
+  div(
+    { 'data-rid': eq.id + '-div',
+      'data-format': eq.format, },
+    xmlEscape(eq.q)
+  );
 
-function makeSource(f) {
-  return "<div data-rid='" + f.id + "-div' data-format='" + f.format + "'>" +
-         xmlEscape(f.q) +
-         "</div>\n";
-}
 
-function xmlEscape(s) {
-  return s.replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/'/g, "&apos;")
-          .replace(/"/g, "&quot;");
-}
 
-const self = module.exports = {
-  initialize: initialize,
-  template: null,
-  clientTable: clientTable,
-  makeRow: makeRow,
-  makeSource: makeSource,
-  xmlEscape: xmlEscape,
-}
+module.exports = {
+  initialize,
+  template,
+  page,
+  row,
+  source,
+};

@@ -8,7 +8,7 @@ const R = require('ramda');
 const url = require('url');
 const util = require('util');
 
-const clientTable = require('./client-template.js').clientTable;
+const clientTemplate = require('./client-template.js');
 const logger = require('winston');
 const parseJats = require('./parse-jats.js');
 
@@ -242,12 +242,12 @@ class RequestHandler {
   }
 
   handleJats() {
-    var jatsFormulas = parseJats(q);
+    var jatsFormulas = parseJats(this.params.q);
     if (typeof jatsFormulas === "string") {
-      return self.badRequest(jatsFormulas);
+      return this.badRequest(jatsFormulas);
     }
-    const content = clientTable(jatsFormulas, params.width);
-    return self.respond(200, 'html', content);
+    const content = clientTemplate.page(jatsFormulas, this.params.width);
+    return this.respond(200, 'html', content);
   }
 
   /**
