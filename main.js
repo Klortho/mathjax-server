@@ -15,14 +15,20 @@ const worker = require('./worker.js');
 
 const numCPUs = os.cpus().length;
 
-if (cluster.isMaster) {
-  const config = getConfig();
-  master.main(config);
-}
-else {
-  worker.main();
-}
 
+/**
+ * If this was invoked from the command line, get the config, then invoke
+ * the main() function for the master process or the worker processes.
+ */
+if (!module.parent) {
+  if (cluster.isMaster) {
+    // The config is only read once -- in the master process. The master sends
+    // the config to each worker in a message.
+    const config = getConfig();
+    master.main(config);
+  }
+  else worker.main();
+}
 
 /**
  * Get user-config; merged from config-one files and command-line arguments
@@ -52,4 +58,9 @@ function programArgs() {
   const props = ['port', 'requests', 'workers', 'logLevel'];
   const args = R.pick(props, program);
   return args;
+}
+
+module.exports = {
+  getConfig,
+  programArgs,
 }

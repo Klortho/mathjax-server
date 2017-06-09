@@ -6,13 +6,12 @@ const fs = require('fs');
 const vows = require('vows');
 const yaml = require('js-yaml');
 
-const RenderMath3 = require('../index.js');
+const RenderMath3 = require('../main.js');
 
 
-// Get document, or throw exception on error
+// Get the test definitions
 try {
   var testDefs = yaml.safeLoad(fs.readFileSync('test/tests.yaml', 'utf8'));
-  //console.log(testDefs);
 } catch (e) {
   console.error(e);
 }
