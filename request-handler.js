@@ -173,7 +173,7 @@ class RequestHandler {
         : q.match(jatsStartTag) ? 'jats'
         : q.match(mmlStartTag) ? 'mml'
         : 'latex';
-      logger.debug('format: ', format);
+      logger.debug('Resolved format: %s', format);
 
       // FIXME: do we still need this?
       // PMC-29429 - filter processing instructions out of MML equations
@@ -201,11 +201,13 @@ class RequestHandler {
    * true.
    */
   handleStatic() {
-    if (this.request.method !== 'GET' || (this.paramStr &&
+    if (this.request.method !== 'GET') return false;
+
+    /* || (this.paramStr &&
          typeof this.paramStr === 'string' && this.paramStr.length > 0))
     {
       return false;
-    }
+    }*/
 
     const _path = this.urlObj.pathname || '/';
     const realPath = _path === '/' ? '/home.html' : _path;

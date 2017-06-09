@@ -2,47 +2,47 @@
 
 const C1 = require('config-one');
 
+function makeUrl(spec) {
+  return spec.authority + spec.path + spec.filename;
+}
+
 // Default configuration
 module.exports = {
   workers: 1,
   port: 16000,
   logLevel: 'debug',
 
-  // The main MathJax library will have a URL like
-  // https://www.ncbi.nlm.nih.gov/core/mathjax/2.5/MathJax.js
-  mjLib: {
-    base: 'https://www.ncbi.nlm.nih.gov/core/mathjax',
-    version: '2.5',
+  mathJax: {
+    main: {
+      authority: 'https://www.ncbi.nlm.nih.gov',
+      version: '2.5',
+      path: C1(X=> `/core/mathjax/${X.mathJax.main.version}/`),
+      filename: 'MathJax.js',
+      url: C1(X=> makeUrl(X.mathJax.main)),
+    },
+    config: {
+      authority: '',
+      path: '/lib/',
+      scope: 'classic',
+      version: '3.4.1',
+      filename: C1(X=> {
+        const self = X.mathJax.config;
+        return `mathjax-config-${self.scope}.${self.version}.js`;
+      }),
+      url: C1(X=> makeUrl(X.mathJax.config)),
+    },
+    url: C1(X=> `${X.mathJax.main.url}?config=${X.mathJax.config.url}`),
   },
-  mjLibUrl: C1(X=> {
-    const d = X.mjLib;
-    return `${d.base}/${d.version}/MathJax.js`;
-  }),
-
-  mjConfig: {
-    base: 'https://www.ncbi.nlm.nih.gov/corehtml/pmc/js',
-    scope: 'classic',
-    version: '3.4.1',
-  },
-  mjConfigUrl: C1(X=> {
-    const d = X.mjConfig;
-    return `${d.base}/mathjax-config-${d.scope}.${d.version}.js`;
-  }),
-
-  mathjaxUrl: C1(X=> {
-    const url = `${X.mjLibUrl}?config=${X.mjConfigUrl}`;
-    return url;
-  }),
 
   logger: {
     transports: [
-      { className: "Console",
+      { className: 'Console',
         config: {
           level: C1(X=> X.logLevel),
           colorize: true,
         },
       },
-      { className: "File",
+      { className: 'File',
         config: {
           level: C1(X=> X.logLevel),
           filename: 'rendermath3.log',
