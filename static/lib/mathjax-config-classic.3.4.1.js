@@ -1,6 +1,6 @@
 /*
  * mathjax-config-classic.3.4.1.js
- * MathJax configuration file customized for PMC, classic view.  
+ * MathJax configuration file customized for PMC, classic view.
  */
 
 
@@ -122,5 +122,4 @@ MathJax.Hub.Register.StartupHook("SVG multiline Ready", function () {
 });
 
 
-MathJax.Ajax.loadComplete("/corehtml/pmc/js/mathjax-config-classic.3.4.1.js");
-
+MathJax.Ajax.loadComplete("/lib/mathjax-config-classic.3.4.1.js");
