@@ -4,10 +4,10 @@ const assert = require('assert');
 const C1 = require('config-one');
 const fs = require('fs');
 const vows = require('vows');
+const util = require('util');
 const yaml = require('js-yaml');
 
-const RenderMath3 = require('../main.js');
-
+// FIXME: tests are not done
 
 // Get the test definitions
 try {
@@ -25,18 +25,14 @@ const defaults = {
 suite.addBatch({
   'Context': {
     topic: function() {
-      const mj = RenderMath3.startMathJax(defaults);
-      const rm3 = new RenderMath3(defaults);
-      rm3.createServer();
-      return {
-        mj: mj,
-        rm3: rm3,
-      };
+      const rm3 = require('../main.js');
+      return rm3;
     },
-    'I am a vow': function(topic) {
-      const rm3 = topic.rm3;
-      assert(rm3.server);
-      rm3.server.close();
+    'I am a vow': function(rm3) {
+      //assert(cfg);
+      assert(rm3);
+      const config = rm3.getConfig();
+      //console.log('config: ' + util.inspect(C1.freeze(config), {depth: null}));
     }
   },
 });

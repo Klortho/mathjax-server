@@ -10,7 +10,9 @@ const R = require('ramda');
  * Serialize an object into an HTML attributes string
  */
 const serialAttrs = attrs =>
-  attrs ? Object.keys(attrs).map(name => `${xmlEscape(name)}='${xmlEscape(attrs[name])}'`)
+  attrs ? Object.keys(attrs)
+            .map(name => `${xmlEscape(name)}='${xmlEscape(attrs[name])}'`)
+            .join(' ')
         : '';
 
 /**

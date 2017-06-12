@@ -24,21 +24,22 @@ if (!module.parent) {
   if (cluster.isMaster) {
     // The config is only read once -- in the master process. The master sends
     // the config to each worker in a message.
-    const config = getConfig();
+    const defaults = getConfig();
+    const args = programArgs();
+    const config = C1.extend(defaults, args, {version: VERSION});
+    logger.reconfig(config.logger);
     master.main(config);
   }
   else worker.main();
 }
 
 /**
- * Get user-config; merged from config-one files and command-line arguments
+ * Get user-config from the config-one files
  */
 function getConfig() {
-  const defaults = C1();
-  logger.reconfig(defaults.logger);
-  const args = programArgs();
-  const config = C1.extend(defaults, args, {version: VERSION});
-  return config;
+  const cfg = C1();
+  logger.reconfig(cfg.logger);
+  return cfg;
 }
 
 /**
@@ -63,6 +64,7 @@ function programArgs() {
   logger.debug('Command line arguments: %j', args);
   return args;
 }
+
 
 module.exports = {
   getConfig,

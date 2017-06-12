@@ -20,18 +20,18 @@ module.exports = {
       filename: 'MathJax.js',
       url: C1(X=> makeUrl(X.mathJax.main)),
     },
-    config: {
+    configFile: {
       authority: '',
       path: '/lib/',
       scope: 'classic',
       version: '3.4.1',
       filename: C1(X=> {
-        const self = X.mathJax.config;
+        const self = X.mathJax.configFile;
         return `mathjax-config-${self.scope}.${self.version}.js`;
       }),
-      url: C1(X=> makeUrl(X.mathJax.config)),
+      url: C1(X=> makeUrl(X.mathJax.configFile)),
     },
-    url: C1(X=> `${X.mathJax.main.url}?config=${X.mathJax.config.url}`),
+    url: C1(X=> `${X.mathJax.main.url}?config=${X.mathJax.configFile.url}`),
   },
 
   logger: {
