@@ -35,6 +35,7 @@ if (!module.parent) {
  */
 function getConfig() {
   const defaults = C1();
+  logger.reconfig(defaults.logger);
   const args = programArgs();
   const config = C1.extend(defaults, args, {version: VERSION});
   return config;
@@ -48,15 +49,18 @@ function programArgs() {
     .option('-p, --port [num]',
       'IP port on which to start the server')
     .option(`--workers [${numCPUs}]`,
-      'Allow at most this many forks. Default is the number of processors in ' +
-      `this machine.`)
+      'Spawn at most this many worker processes. Defaults to the number of CPUs',
+      parseInt)
     .option('-l, --log-level [level]',
       'Set the log level to one of "silly", "debug", "verbose", "info", ' +
-      '"warn", or "error".')
+      '"warn", or "error".');
+  program
     .parse(process.argv);
+  console.log('program.workers: %d', program.workers);
 
-  const props = ['port', 'requests', 'workers', 'logLevel'];
+  const props = ['port', 'workers', 'logLevel'];
   const args = R.pick(props, program);
+  logger.debug('Command line arguments: %j', args);
   return args;
 }
 

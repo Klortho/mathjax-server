@@ -28,3 +28,4 @@ node_modules
 .lock-wscript
 /config-local.json
 .nfs*
+/package-lock.json

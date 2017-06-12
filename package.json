@@ -32,7 +32,7 @@
   ],
   "dependencies": {
     "commander": "^2.9.0",
-    "config-one": "0.0.3",
+    "config-one": "0.0.4",
     "fs-extra": "^2.0.0",
     "js-yaml": "^3.8.4",
     "mathjax-node": "^0.5.2",
