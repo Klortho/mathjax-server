@@ -25,7 +25,7 @@ use List::MoreUtils qw(uniq);
 
 my $debug = 1;
 
-my $examples_dir = '../examples';
+my $examples_dir = '../static/examples';
 my $default_service_url = 'http://localhost:16000';
 
 my %options;
@@ -232,9 +232,9 @@ sub test_one {
     else {
         if ($verbose) {
             print "Testing $test_name: ". $request_method . ":\n";
-            print "  " . join("\n  ", map {
+            print "  '" . join("\n  ", map {
                     "$_=" . ($_ eq 'q' ? string_start($request->{$_}) : $request->{$_})
-                } keys %$request) . "\n";
+                } keys %$request) . "'\n";
         }
         $response = $ua->post($test_url, $request);
     }

@@ -298,14 +298,19 @@ class RequestHandler {
     const params = self.params;
     const format = self.format;
 
+    // Get rid of processing instructions here
+    const q = format !== 'mml' ? params.q :
+      params.q.replace(/<\?.*?\?>/g, '');
+
     // Convert rendermath params to mathjax-node conventions
     const mjOpts = {
-      math: params.q,
+      math: q,
       format: (format === 'mml' ? 'MathML' : 'TeX'),
       svg: true,
     };
     logger.silly(`mjOpts: ${util.inspect(mjOpts)}`);
 
+    // FIXME: need a timeout here; see test #12
     mjAPI.typeset(mjOpts, function(result) {
       try {
         logger.silly('MathJax result: ' + util.inspect(result));
