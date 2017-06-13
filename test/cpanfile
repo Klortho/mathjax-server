@@ -1,4 +1,5 @@
 requires 'Carp::Assert';
 requires 'perl', '5.16.2';
 requires 'URI::Encode';
-requires 'YAML', "1.23";
+requires 'YAML', '1.23';
+requires 'List::Util', '1.47';
