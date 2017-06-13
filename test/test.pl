@@ -21,7 +21,6 @@ use URI::Encode qw(uri_encode);
 use Getopt::Long;
 use Data::Dumper;
 use List::Util qw(any);
-use List::MoreUtils qw(uniq);
 
 my $debug = 1;
 
