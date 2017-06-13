@@ -30,13 +30,14 @@
     content-contains: "Most of the examples"
 
 # GET a static resource
-- name: static-resource
-  request:
-    method: GET
-    path: /resources/client.js
-  expected:
-    content-type: 'application/javascript; charset=utf-8'
+#- name: static-resource
+#  request:
+#    method: GET
+#    path: /resources/client.js
+#  expected:
+#    content-type: 'application/javascript; charset=utf-8'
 
+# 2
 # Bad GET: non-existent page
 - name: bad-static
   request:
@@ -45,18 +46,19 @@
   expected:
     code: 404
     content-type: 'text/plain; charset=utf-8'
-    content-contains: "Unable to open file"
+    content-contains: "File not found"
 
+# 3
 # GET request with some bad params
-- name: bad-get-params
-  request:
-    method: GET
-    foo: bar
-    baz: buzz
-  expected:
-    code: 400
-    content-type: 'text/plain; charset=utf-8'
-    content-contains: "Unrecognized parameter name"
+#- name: bad-get-params
+#  request:
+#    method: GET
+#    foo: bar
+#    baz: buzz
+#  expected:
+#    code: 400
+#    content-type: 'text/plain; charset=utf-8'
+#    content-contains: "Unrecognized parameter name"
 
 # POST request with no params, should get an error
 - name: bad-post-no-params

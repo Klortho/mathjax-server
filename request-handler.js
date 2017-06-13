@@ -16,7 +16,7 @@ const parseJats = require('./parse-jats.js');
 const staticGlobs = [
   '/home.html',
   '/home.js',
-  '/favicon.ico',
+  '/favicon.*',
   '/examples/*',
   '/lib/*',
 ];
@@ -68,6 +68,10 @@ const fileTypes = {
     contentType: 'text/plain',
     encoding: 'utf-8',
   },
+  'md': {
+    contentType: 'text/plain',
+    encoding: 'utf-8',
+  }
 };
 
 // Get the file type object, given an extension
@@ -113,10 +117,12 @@ class RequestHandler {
 
       // Parse the URL
       const urlObj = self.urlObj = url.parse(request.url);
+      logger.silly('  ... parsed URL: ' + util.inspect(urlObj));
 
       if (method === 'GET') {
         self.paramStr = urlObj.query;
       }
+
       else if (method === 'POST') {
         // Verify that there is some POST content
         if (self.requestContent.length === 0)
@@ -124,6 +130,7 @@ class RequestHandler {
         logger.debug('POST content: ', self.requestContent);
         self.paramStr = self.requestContent;
       }
+
       else {
         return self.badRequest('Method not supported');
       }
@@ -141,6 +148,12 @@ class RequestHandler {
       const parsed = querystring.parse(self.paramStr);
       const params = self.params = R.merge(defaults, parsed);
       logger.silly('Params: ' + util.inspect(params));
+
+      //const allowedPnames = R.keys(defaults);
+      //const givenPnames = R.keys(parsed);
+      //if (R.difference(givenPnames, allowedPnames).length > 0) {
+      //  return self.badRequest('Unrecognized parameter name(s)');
+      //}
 
       // validate all of the params
       const inFormat = params['in-format'];
@@ -201,7 +214,7 @@ class RequestHandler {
    * true.
    */
   handleStatic() {
-    if (this.request.method !== 'GET') return false;
+    if ( this.request.method !== 'GET' ) return false;
 
     /* || (this.paramStr &&
          typeof this.paramStr === 'string' && this.paramStr.length > 0))
@@ -220,6 +233,8 @@ class RequestHandler {
         const extension = realPath.replace(/.*\.(.*)/, "$1");
         const encoding = getFileType(extension).encoding;
         const tmpl = fs.readFileSync('static' + realPath, encoding);
+
+
         // If this is a text file, do our little template substitution
         const content = encoding === 'utf8' ?
           tmpl.replace("<!-- version -->", VERSION) : tmpl;
@@ -231,9 +246,16 @@ class RequestHandler {
         };
       }
       catch(err) {
-        const msg = 'An error occurred trying to serve a static resource';
-        logger.error(msg + ': ' + err.stack);
-        this.badRequest(msg);
+        if (err.code === 'ENOENT') {
+          logger.info(`Static resource not found: ${realPath}`);
+          this.respond(404, 'txt', '404 - File not found!');
+        }
+        else {
+          // this shouldn't happen, I don't think; so log an error
+          const msg = 'Error trying to retrieve a static resource';
+          logger.error(`${msg}: "${realPath}": ${err}`);
+          this.respond(400, 'txt', msg);
+        }
         return true;
       }
     }
