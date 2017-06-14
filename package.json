@@ -1,13 +1,13 @@
 {
-  "name": "rendermath3",
+  "name": "rendermath",
   "version": "1.0.3-dev",
-  "description": "PMC RenderMath 3 service",
-  "main": "index.js",
+  "description": "HTTP service for rendering mathematical equations using MathJax",
+  "main": "main.js",
   "directories": {
     "test": "test"
   },
   "bin": {
-    "rendermath": "index.js"
+    "rendermath": "main.js"
   },
   "scripts": {
     "test": "vows 'test/test*.js' --spec"

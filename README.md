@@ -4,17 +4,23 @@ This implementation of RenderMath uses the [mathjax-node
 library](https://github.com/mathjax/mathjax-node).
 
 
-
 To run it:
 
 ```bash
 git clone https://github.com/ncbi/rendermath3.git
 cd rendermath3
 npm install
-node ./main.js --port 18897
+node main.js
 ```
 
-Then point your browser at http://localhost:18897.
+Then point your browser at http://localhost:16000.
+
+To get a list of command-line options, and what they do:
+
+```
+rendermath --help
+```
+
 
 When doing development, to have the server auto-restart when there are changes
 to source files, use `./node_modules/.bin/nodemon` instead of `node`; or,
