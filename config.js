@@ -1,6 +1,7 @@
 "use strict";
 
 const C1 = require('config-one');
+const os = require('os');
 
 function makeUrl(spec) {
   return spec.authority + spec.path + spec.filename;
@@ -8,7 +9,8 @@ function makeUrl(spec) {
 
 // Default configuration
 module.exports = {
-  workers: 1,
+  // number of workers defaults to number of cpus, but not to exceed 16
+  workers: Math.min(os.cpus().length, 16),
   port: 16000,
   logLevel: 'debug',
 
