@@ -1,6 +1,6 @@
 {
   "name": "rendermath",
-  "version": "1.0.3-dev",
+  "version": "1.0.3",
   "description": "HTTP service for rendering mathematical equations using MathJax",
   "main": "main.js",
   "directories": {
